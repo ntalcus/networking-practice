@@ -11,8 +11,11 @@ class Router:
             self.known_hosts[name] = sender
 
     def transmitMessage(self, targetName, senderName, message):
+        if targetName not in self.known_hosts:
+            return False
         receiver = self.known_hosts[targetName]
-        receiver.receiveMessage(self.name, senderName, message)
+        response = receiver.receiveMessage(self.name, senderName, message)
+        return response
         
 
     def queryStatus(self, targetName, senderName):
@@ -34,12 +37,14 @@ class Router:
         else:
             print(f"{host} is not known by router {self.name}.")
             return False
+    
 
     
 class EndSystem:
 
     def __init__(self, name):
         self.name = name
+        self.currentConnection = None
     
     def establishConnection(self, targetName, router):
         if not router.confirmHost(self.name) or not router.confirmHost(targetName):
@@ -55,11 +60,23 @@ class EndSystem:
             return True
 
     def sendMessage(self, targetName, router, message):
-        if not router.confirmHost(self.name) or not router.confirmHost(targetName):
+        # This is not correct and I should change it so that the sender is checked on reception
+        if not self.confirmConnection(targetName):
             print("Message not sent between {self.name} and {targetName}.")
             return False
+        response = router.transmitMessage(targetName, self.name)
+        return response
+
+    def receiveMessage(self, senderName):
+
         
+    
+    def confirmConnection(self, senderName):
+        return self.currentConnection == senderName
         
+    def endConnection(self):
+        self.currentConnection = None 
+
 
     def registerSelf(self, router):
         router.addHost(self.name, self)
@@ -83,4 +100,4 @@ host1.sendMessage(host2.name, router, "yeet we will soon my dude, but not yet")
 # host1 establishes connection and sends message
 print("functional connection and message")
 host1.establishConnection(host2.name, router)
-host1.sendMessage(host2.name, router, "dareth I presume that thou has yoton'd my yought?")
+host1.sendMessage(host2.name, router, "dareth I presume that thou has yoton'd my yote?")
